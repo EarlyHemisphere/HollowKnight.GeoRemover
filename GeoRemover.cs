@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class GeoRemover : Mod, ITogglableMod {
     internal static GeoRemover Instance;
-    private GameObject geoText = null;
-    private GameObject geoSprite = null;
+    private GameObject geoText;
+    private GameObject geoSprite;
 
     public GeoRemover() : base("Geo Remover") {
        Instance = this;
@@ -15,12 +15,18 @@ public class GeoRemover : Mod, ITogglableMod {
         Log("Initializing");
 
         Instance = this;
-        ModHooks.HeroUpdateHook += PollForGeo;
+        ModHooks.SavegameLoadHook += InitiateGeoPoll;
 
         Log("Initialized");
     }
 
     public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
+
+    public void InitiateGeoPoll(int _) {
+        geoText = null;
+        geoSprite = null;
+        ModHooks.HeroUpdateHook += PollForGeo;
+    }
 
     private void PollForGeo() {
         if (geoText == null) {
@@ -42,5 +48,6 @@ public class GeoRemover : Mod, ITogglableMod {
             geoSprite.transform.localScale = new Vector3(1, 1, 1);
         }
         ModHooks.HeroUpdateHook -= PollForGeo;
+        ModHooks.SavegameLoadHook -= InitiateGeoPoll;
     }
 }
