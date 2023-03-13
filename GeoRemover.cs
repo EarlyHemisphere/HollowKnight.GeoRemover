@@ -1,6 +1,8 @@
 ﻿using Modding;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace GeoRemover {
     public class GeoRemover : Mod, ITogglableMod {
@@ -19,10 +21,20 @@ namespace GeoRemover {
             geoText = null;
             geoSprite = null;
             ModHooks.Instance.HeroUpdateHook += PollForGeo;
+            USceneManager.activeSceneChanged += SceneChanged;
+
             Log("Initialized");
         }
 
         public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
+
+        private void SceneChanged(Scene from, Scene to) {
+            if (to.name == "Menu_Title") {
+                geoText = null;
+                geoSprite = null;
+                ModHooks.Instance.HeroUpdateHook += PollForGeo;
+            }
+        }
 
         private void PollForGeo() {
             if (geoText == null) {
