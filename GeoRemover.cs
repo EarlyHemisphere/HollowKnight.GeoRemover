@@ -1,22 +1,21 @@
 ﻿using Modding;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 public class GeoRemover : Mod, ITogglableMod {
-    internal static GeoRemover Instance;
+    internal static GeoRemover instance;
     private GameObject geoText;
     private GameObject geoSprite;
 
     public GeoRemover() : base("Geo Remover") {
-        Instance = this;
+        instance = this;
     }
 
-    public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects) {
+    public override void Initialize() {
         Log("Initializing");
 
-        Instance = this;
+        instance = this;
         geoText = null;
         geoSprite = null;
         ModHooks.HeroUpdateHook += PollForGeo;
@@ -27,8 +26,8 @@ public class GeoRemover : Mod, ITogglableMod {
 
     public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
 
-    private void SceneChanged(Scene from, Scene to) {
-        if (to.name == "Menu_Title") {
+    private void SceneChanged(Scene _, Scene to) {
+        if (to.name == Constants.MENU_SCENE) {
             geoText = null;
             geoSprite = null;
             ModHooks.HeroUpdateHook += PollForGeo;
@@ -55,5 +54,6 @@ public class GeoRemover : Mod, ITogglableMod {
             geoSprite.transform.localScale = new Vector3(1, 1, 1);
         }
         ModHooks.HeroUpdateHook -= PollForGeo;
+        USceneManager.activeSceneChanged -= SceneChanged;
     }
 }
