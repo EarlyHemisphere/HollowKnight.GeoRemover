@@ -1,11 +1,9 @@
-﻿using Modding;
+using Modding;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 public class GeoRemover : Mod, ITogglableMod {
     internal static GeoRemover instance;
-    private GameObject geoText;
+    private GameObject geoCounter;
     private GameObject geoSprite;
 
     public GeoRemover() : base("Geo Remover") {
@@ -16,44 +14,41 @@ public class GeoRemover : Mod, ITogglableMod {
         Log("Initializing");
 
         instance = this;
-        geoText = null;
-        geoSprite = null;
-        ModHooks.HeroUpdateHook += PollForGeo;
-        USceneManager.activeSceneChanged += SceneChanged;
+        On.HeroController.Start += OnHeroStart;
+        HideGeo();
 
         Log("Initialized");
     }
 
     public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
 
-    private void SceneChanged(Scene _, Scene to) {
-        if (to.name == Constants.MENU_SCENE) {
-            geoText = null;
-            geoSprite = null;
-            ModHooks.HeroUpdateHook += PollForGeo;
-        }
+    private void OnHeroStart(On.HeroController.orig_Start orig, HeroController self) {
+        orig(self);
+        HideGeo();
     }
 
-    private void PollForGeo() {
-        if (geoText == null) {
-            geoText = GameObject.Find("Geo Counter");
-        }
-        if (geoSprite == null) {
-            geoSprite = GameObject.Find("Geo Sprite");
-        }
-        if (geoText != null && geoSprite != null) {
-            geoText.transform.localScale = new Vector3(0, 0, 0);
-            geoSprite.transform.localScale = new Vector3(0, 0, 0);
-            ModHooks.HeroUpdateHook -= PollForGeo;
-        }
+    private void HideGeo() {
+        GeoCounter counter = GameCameras.instance.geoCounter;
+        if (counter == null) return;
+
+        geoCounter = counter.gameObject;
+        geoSprite = counter.geoSprite;
+
+        geoCounter.transform.localScale = Vector3.zero;
+        geoSprite.transform.localScale = Vector3.zero;
     }
 
     public void Unload() {
-        if (geoText != null && geoSprite != null) {
-            geoText.transform.localScale = new Vector3(1, 1, 1);
-            geoSprite.transform.localScale = new Vector3(1, 1, 1);
+        On.HeroController.Start -= OnHeroStart;
+
+        if (geoCounter != null) {
+            geoCounter.transform.localScale = Vector3.one;
         }
-        ModHooks.HeroUpdateHook -= PollForGeo;
-        USceneManager.activeSceneChanged -= SceneChanged;
+        if (geoSprite != null) {
+            geoSprite.transform.localScale = Vector3.one;
+        }
+
+        geoCounter = null;
+        geoSprite = null;
     }
 }
